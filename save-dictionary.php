@@ -79,20 +79,7 @@ file_put_contents($dictionaryPath, $json);
 </head>
 <body>
 
-    <h2>Dictionary Saved Successfully</h2>
-
-    <p>The file was saved at:</p>
-    <p><code><?= htmlspecialchars($dictionaryPath) ?></code></p>
-
-    <p>
-        <a href="<?= htmlspecialchars($downloadUrl) ?>" download>
-            <button>⬇ Download Updated JSON</button>
-        </a>
-    </p>
-
-    <p><a href="<?= htmlspecialchars($backToEditor) ?>">← Back to Editor</a></p>
-
-    <p><a href="<?= htmlspecialchars($backHome) ?>">← Home</a></p>
+    <h2>Dictionary Saved Successfully!</h2>
 
 </body>
 </html>

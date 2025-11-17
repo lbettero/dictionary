@@ -1,11 +1,9 @@
 <?php
-// dictionary-style-editor.php
+    // public/index.php
 
-// ---------------------------------------------
-// DETECTA SE ESTAMOS NO MÓDULO (DEMO) OU NO SITE
-// ---------------------------------------------
-$localCssPath = __DIR__ . '/dictionary-custom.css';   // módulo / demo
-$rootCssPath  = $_SERVER['DOCUMENT_ROOT'] . '/assets/css/dictionary-custom.css'; // site real
+
+$localCssPath = __DIR__ . '/dictionary-custom.css';
+$rootCssPath  = $_SERVER['DOCUMENT_ROOT'] . '/assets/css/dictionary-custom.css';
 
 $isModuleDemo = false;
 
@@ -16,7 +14,7 @@ if (file_exists($localCssPath)) {
 } else {
     $cssPath = $rootCssPath;
     $isModuleDemo = false;
-    $formAction = "save-dictionary-css.php";
+    $formAction = "save_dictionary_css.php";
 }
 
 // ---------------------------------------------
@@ -82,53 +80,46 @@ if (file_exists($cssPath)) {
 </head>
 
 <body>
+<div class="p-4">
+    <h2 class="text-xl font-bold mb-4">Dictionary CSS Style Editor</h2>
 
-<h1>Dictionary CSS Style Editor</h1>
-
-<p>Editing file: <code><?= htmlspecialchars($cssPath) ?></code></p>
-
-<form action="<?= htmlspecialchars($formAction) ?>" method="POST">
-    <p>
-    <label>Tooltip Background Color</label>
-    <input type="color" name="bg_color" value="<?= htmlspecialchars($values['bg_color']) ?>">
-    </p>
-    <p>
-    <label>Tooltip Text Color</label>
-    <input type="color" name="text_color" value="<?= htmlspecialchars($values['text_color']) ?>">
-    </p>
-    <p>
-    <label>Underline Color (Term)</label>
-    <input type="color" name="underline_color" value="<?= htmlspecialchars($values['underline_color']) ?>">
-    </p>
-    <p>
-    <label>Tooltip Width (px)</label>
-    <input type="number" name="width" value="<?= htmlspecialchars($values['width']) ?>">
-    </p>
-    <p>
-    <label>Tooltip Padding (px)</label>
-    <input type="number" name="padding" value="<?= htmlspecialchars($values['padding']) ?>">
-    </p>
-    <p>
-    <label>Border Radius (px)</label>
-    <input type="number" name="radius" value="<?= htmlspecialchars($values['radius']) ?>">
-    </p>
-    <p>
-    <label>Font Size (px)</label>
-    <input type="number" name="font_size" value="<?= htmlspecialchars($values['font_size']) ?>">
-    </p>
-    <button type="submit">Save Custom CSS</button>
-</form>
-
-<p>
-    <strong>Preview:</strong><br>
-    Hover the term 
-    <span style="border-bottom:1px dashed <?= htmlspecialchars($values['underline_color']) ?>;">example</span>
-    on your site to test.
-</p>
-
-<p>
-    <a href="index.php">← Back to main page</a>
-</p>
-
-</body>
-</html>
+    <form action="<?= htmlspecialchars($formAction) ?>" method="POST">
+        <p>
+        <label>Tooltip Background Color</label>
+        <input type="color" name="bg_color" value="<?= htmlspecialchars($values['bg_color']) ?>">
+        </p>
+        <p>
+        <label>Tooltip Text Color</label>
+        <input type="color" name="text_color" value="<?= htmlspecialchars($values['text_color']) ?>">
+        </p>
+        <p>
+        <label>Underline Color (Term)</label>
+        <input type="color" name="underline_color" value="<?= htmlspecialchars($values['underline_color']) ?>">
+        </p>
+        <p>
+        <label>Tooltip Width (px)</label>
+        <input type="number" name="width" value="<?= htmlspecialchars($values['width']) ?>">
+        </p>
+        <p>
+        <label>Tooltip Padding (px)</label>
+        <input type="number" name="padding" value="<?= htmlspecialchars($values['padding']) ?>">
+        </p>
+        <p>
+        <label>Border Radius (px)</label>
+        <input type="number" name="radius" value="<?= htmlspecialchars($values['radius']) ?>">
+        </p>
+        <p>
+        <label>Font Size (px)</label>
+        <input type="number" name="font_size" value="<?= htmlspecialchars($values['font_size']) ?>">
+        </p>
+        <p>
+        <button 
+                type="submit"
+                class="mt-4 bg-green-600 text-white px-6 py-2 rounded"
+            >
+            Save Custom CSS</button>
+        </p>
+    </form>
+    </body>
+    </html>
+</div>

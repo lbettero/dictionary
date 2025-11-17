@@ -77,19 +77,7 @@ file_put_contents($cssPath, $css);
 
 <body>
 
-    <h2>Custom CSS Saved Successfully</h2>
-
-    <p>Your tooltip styles have been applied and saved to:</p>
-
-    <p><code><?= htmlspecialchars($cssPath) ?></code></p>
-
-    <p>
-        <a href="<?= htmlspecialchars($backToEditor) ?>">← Back to CSS Editor</a>
-    </p>
-
-    <p>
-        <a href="<?= htmlspecialchars($backHome) ?>">← Home</a>
-    </p>
+    <h2>Custom CSS Saved Successfully!</h2>
 
 </body>
 </html>
