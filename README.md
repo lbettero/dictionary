@@ -1,171 +1,208 @@
 # 📘 Dictionary Module — v1.0.0
 
-A lightweight, plug-and-play module that automatically detects predefined terms inside any webpage, highlights them with a dashed underline, and displays a clean tooltip containing their definitions on hover.  
-All terms and definitions are stored in a simple JSON file (`dictionary.json`), making the module portable, editable, and easy to integrate into any PHP, JS, or static website project.
+A lightweight, plug-and-play tooltip dictionary that automatically detects predefined terms inside any webpage, highlights them with a dashed underline, and displays clean tooltips containing their definitions.  
+All terms and definitions are loaded from a simple JSON file (`dictionary.json`), making the module fully portable and easy to integrate into any PHP, JS, or static website.
 
 ---
 
 ## 🚀 Features
 
 - **Automatic term detection**  
-  Scans the entire page and identifies words defined in `dictionary.json`.
+  Scans the page and highlights any term found in the dictionary JSON.
 
 - **Clean tooltip UI**  
-  Shows a definition box on hover with customizable colors, fonts, and dimensions.
+  Modern, compact tooltips rendered with pure CSS + JavaScript.
 
 - **Dashed underline highlight**  
-  Every recognized term is visually marked in the text.
+  Clearly marks terms with a subtle dashed underline.
 
 - **JSON-based dictionary**  
-  All definitions are stored in a simple `dictionary.json` file.
+  Very easy to edit and maintain (`assets/data/dictionary.json`).
 
-- **HTML support in tooltips**  
-  Auto-detects URLs and emails inside definitions and converts them into clickable links.
+- **HTML support in definitions**  
+  URLs and emails inside definitions are automatically transformed into clickable links.
 
-- **CSS customization panel**  
-  Includes a built-in editor (`dictionary-style-editor.php`) to customize tooltip design.
+- **Style inheritance**  
+  The tooltip automatically inherits typography and global colors from the website’s main stylesheet.
 
-- **Dictionary editor**  
-  Includes a visual editor (`dictionary-editor.php`) to add, edit, and delete terms.
-
-- **No dependencies**  
-  Pure JavaScript + CSS + PHP. Works in any environment.
+- **Framework-free**  
+  Works with plain HTML, PHP, or any frontend framework.
 
 ---
 
 ## 📁 Project Structure
 
-
-
+```
 dictionary/
 │
-├── index.html
-├── dictionary.js
-├── dictionary.css
-├── dictionary-custom.css ← generated automatically (optional)
-├── dictionary.json
+├── index.php                     ← demo page
 │
-├── dictionary-editor.php ← JSON editor
-├── save_dictionary.php
+├── dictionary-loader.js          ← auto-initializer
+├── dictionary.js                 ← core tooltip engine
 │
-├── dictionary-style-editor.php ← CSS theme editor
-└── save_dictionary_css.php
+├── assets/
+│   ├── css/
+│   │   ├── dictionary.css        ← base tooltip styles
+│   │   └── dictionary-custom.css ← optional overrides
+│   │
+│   └── data/
+│       └── dictionary.json       ← term definitions (editable)
+│
+├── content_editor.png            ← old editor preview (for documentation)
+└── style_editor.png              ← old style editor preview
+```
 
+> 📝 *The legacy JSON and CSS editors were intentionally removed for security and simplicity.*
 
 ---
 
 ## 🧩 How It Works
 
-1. The script loads `dictionary.json`.
-2. It scans the DOM for matches of the defined terms.
-3. Each term is wrapped in:
-   ```html
-   <span class="dict-term">
-       term
-       <span class="dict-tooltip">definition</span>
-   </span>
+1. The loader reads `dictionary.json`.
+2. It scans the DOM for terms defined in the JSON file.
+3. Each occurrence is automatically wrapped as:
 
+```html
+<span class="dict-term">
+    term
+    <span class="dict-tooltip">definition</span>
+</span>
+```
 
-The tooltip appears on hover, styled by:
+4. Tooltips become visible on hover, styled by:
 
-dictionary.css
+- `assets/css/dictionary.css`  
+- `assets/css/dictionary-custom.css` (optional)
 
-dictionary-custom.css (if present)
+---
 
-🛠 Installation
+## 🛠 Installation
 
-Just copy the entire folder into any website project.
+Copy the entire `/dictionary` folder into your project under:
 
-Include the CSS and JS in your HTML:
+```
+/UITools/dictionary/
+```
 
-<link rel="stylesheet" href="dictionary.css">
-<link rel="stylesheet" href="dictionary-custom.css"> <!-- optional -->
+Then include the module in your global **header**:
 
-<script src="dictionary.js" defer></script>
+### **With automatic style detection (recommended)**
 
-📚 Editing the Dictionary
+```php
+<?php
+$siteStyle = "";
 
-Open:
+$mainCss = $_SERVER['DOCUMENT_ROOT'] . "/assets/css/main.css";
+$rootCss = $_SERVER['DOCUMENT_ROOT'] . "/style.css";
 
-dictionary-editor.php
+if (file_exists($mainCss)) {
+    $siteStyle = "/assets/css/main.css";
+} elseif (file_exists($rootCss)) {
+    $siteStyle = "/style.css";
+}
+?>
 
+<?php if ($siteStyle): ?>
+<link rel="stylesheet" href="<?= $siteStyle ?>">
+<?php endif; ?>
 
-This visual editor allows you to:
+<link rel="stylesheet" href="/UITools/dictionary/assets/css/dictionary.css">
+<link rel="stylesheet" href="/UITools/dictionary/assets/css/dictionary-custom.css">
+<script src="/UITools/dictionary/dictionary-loader.js" defer></script>
+```
 
-Add new terms
+### **Mark any content area for scanning**
 
-Edit existing terms
+```html
+<div data-dictionary-scope="true">
+    The Archaeology field depends on Interoperability.
+</div>
+```
 
-Delete terms
+---
 
-Save the updated JSON file (alphabetically sorted)
+## 📚 Editing the Dictionary
 
-Download the updated dictionary.json
+You can edit the dictionary manually in:
 
-Definitions may include URLs or emails, which are automatically converted into clickable links in tooltips.
+```
+UITools/dictionary/assets/data/dictionary.json
+```
 
-🎨 Customizing the Tooltip UI
+Example structure:
 
-Open:
+```json
+{
+    "Archaeology": "Study of human history through material remains.",
+    "Interoperability": "The ability of systems to exchange and use information.",
+    "Cultural Heritage": "Legacy of physical artifacts and intangible attributes inherited from past generations."
+}
+```
 
-dictionary-style-editor.php
+---
 
+## 🎨 Customizing the Tooltip UI
 
-You can customize:
+Optional overrides can be added inside:
 
-Tooltip background color
+```
+UITools/dictionary/assets/css/dictionary-custom.css
+```
 
-Text color
+This file can control:
 
-Underline color
+- Colors  
+- Padding  
+- Border radius  
+- Tooltip width  
+- Font size  
 
-Width
+If removed, the module falls back to default styling.
 
-Padding
+---
 
-Border radius
+## 🧪 Demo Page
 
-Font size
+The included `index.php` contains:
 
-Changes are saved in:
+- A live embedded example  
+- A sample JSON dictionary  
+- Documentation and preview images  
 
-dictionary-custom.css
+This page is safe to include inside any website during testing.
 
+---
 
-This file is optional; the module works even if it doesn't exist.
+## 🔒 Requirements
 
-🧪 Demo Page
+- Works on **any server** (PHP not required unless editing JSON manually)  
+- Modern browser with ES6 support  
 
-The included index.html demonstrates how the module behaves with sample content.
+---
 
-🔒 Requirements
+## 📦 Version
 
-PHP 7+ (only for the editors; the core module works without PHP)
-
-Modern browser with ES6 support
-
-📦 Version
-
-v1.0.0 — Initial stable release
+**v1.0.0 — Initial stable release**
 
 Includes:
 
-Term detection and tooltip engine
+- Automatic term detection system  
+- Tooltip engine  
+- JSON dictionary  
+- Auto-linking of URLs/emails  
+- Default and customizable styling  
+- Demo page  
+- Preview illustrations of the deprecated editors  
 
-JSON dictionary system
+---
 
-Dictionary editor
+## 📄 License
 
-CSS customization editor
+MIT License — free for personal and commercial use.
 
-Auto-linking for URLs and emails
+---
 
-Demo page
+## 🤝 Contributing
 
-📄 License
-
-MIT License. Free for personal and commercial use.
-
-🤝 Contributing
-
-Feel free to open an issue or submit a pull request with suggestions or improvements.
+Pull requests and issues are welcome.  
+If you want to improve the tooltip engine, dictionary parser, or loader logic, feel free to contribute.
