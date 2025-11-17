@@ -1,0 +1,14 @@
+/* Auto-generated custom CSS for Dictionary tooltip */
+
+.dict-term {
+    border-bottom: 1px dashed #ff0000;
+}
+
+.dict-tooltip {
+    background: #fff700 !important;
+    color: #000000 !important;
+    max-width: 280px !important;
+    padding: 12px !important;
+    border-radius: 6px !important;
+    font-size: 14px !important;
+}

@@ -1,0 +1,111 @@
+/* ============================================================
+   Tooltip Styles (core module)
+   ============================================================ */
+
+.dict-term {
+    border-bottom: 1px dashed #555;
+    cursor: help;
+    position: relative;
+}
+
+.dict-tooltip {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background: #333;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 6px;
+    max-width: 280px;
+    white-space: normal;
+    z-index: 99999;
+    margin-top: 6px;
+    font-size: 0.85rem;
+    line-height: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.dict-term:hover .dict-tooltip {
+    display: block;
+}
+
+.dict-tooltip a {
+    color: #4da3ff;
+    text-decoration: underline;
+}
+
+/* ============================================================
+   PAGE LAYOUT STYLES (formerly in index.html <style>)
+   Used for homepage, demo, readme presentation
+   ============================================================ */
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 40px;
+    line-height: 1.6;
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fafafa;
+}
+
+h1 {
+    margin-bottom: 10px;
+    font-size: 36px;
+}
+
+h2 {
+    margin-top: 40px;
+    margin-bottom: 15px;
+    font-size: 26px;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 5px;
+}
+
+h3 {
+    margin-top: 25px;
+    font-size: 22px;
+}
+
+code {
+    background: #eee;
+    padding: 3px 5px;
+    border-radius: 4px;
+}
+
+pre {
+    background: #272822;
+    color: #f8f8f2;
+    padding: 15px;
+    border-radius: 6px;
+    overflow-x: auto;
+}
+
+.top-links {
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #ccc;
+}
+
+.top-links a {
+    display: inline-block;
+    margin-right: 15px;
+    font-size: 15px;
+    text-decoration: none;
+    color: #0066cc;
+    border-bottom: 1px dashed #0066cc;
+}
+
+.top-links a:hover {
+    color: #004999;
+    border-bottom-color: #004999;
+}
+
+.demo-box {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
