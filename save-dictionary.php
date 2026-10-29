@@ -1,85 +1,58 @@
 <?php
-// save-dictionary.php — UNIVERSAL VERSION
+declare(strict_types=1);
 
-// -------------------------------------------------------
-// 1. DETECT MODE: MODULE DEMO vs SITE INSTALL
-// -------------------------------------------------------
-$localDictionaryPath = __DIR__ . '/dictionary.json'; // módulo / demo
-$rootDictionaryPath  = $_SERVER['DOCUMENT_ROOT'] . '/assets/data/dictionary.json'; // site real
+require_once __DIR__ . '/security.php';
+dictionary_require_secure_post();
 
-$isModuleDemo = false;
-
-if (file_exists($localDictionaryPath)) {
-    // DEMO MODE
-    $dictionaryPath = $localDictionaryPath;
-    $isModuleDemo   = true;
-
-    $backToEditor = "dictionary-editor.php";
-    $backHome     = "index.php";
-    $downloadUrl  = "dictionary.json";
-
-} else {
-    // SITE MODE
-    $dictionaryPath = $rootDictionaryPath;
-    $isModuleDemo   = false;
-
-    $backToEditor = "dictionary-editor.php";
-    $backHome     = "/"; // ajuste se quiser outra home
-    $downloadUrl  = "/assets/data/dictionary.json";
+$terms = $_POST['terms'] ?? null;
+$definitions = $_POST['definitions'] ?? null;
+if (!is_array($terms) || !is_array($definitions) || count($terms) !== count($definitions)) {
+    dictionary_fail(422, 'Terms and definitions must be matching arrays.');
+}
+if (count($terms) > DICTIONARY_MAX_ENTRIES) {
+    dictionary_fail(422, 'The dictionary contains too many entries.');
 }
 
-// -------------------------------------------------------
-// 2. VALIDATE POST
-// -------------------------------------------------------
-if (!isset($_POST['terms'], $_POST['definitions'])) {
-    die("Invalid data.");
-}
-
-$terms       = $_POST['terms'];
-$definitions = $_POST['definitions'];
-
-$newDict = [];
-
-// -------------------------------------------------------
-// 3. BUILD NEW DICTIONARY ARRAY
-// -------------------------------------------------------
-for ($i = 0; $i < count($terms); $i++) {
-    $term = trim($terms[$i]);
-    $def  = trim($definitions[$i]);
-
-    if ($term !== '') {
-        $newDict[$term] = $def;
+$newDictionary = [];
+foreach ($terms as $index => $rawTerm) {
+    $rawDefinition = $definitions[$index] ?? null;
+    if (!is_string($rawTerm) || !is_string($rawDefinition)) {
+        dictionary_fail(422, 'Every term and definition must be text.');
     }
+
+    $term = trim($rawTerm);
+    $definition = trim($rawDefinition);
+    if ($term === '') {
+        continue;
+    }
+    if (dictionary_string_length($term) > DICTIONARY_MAX_TERM_LENGTH) {
+        dictionary_fail(422, 'A term is too long.');
+    }
+    if (dictionary_string_length($definition) > DICTIONARY_MAX_DEFINITION_LENGTH) {
+        dictionary_fail(422, 'A definition is too long.');
+    }
+    $newDictionary[$term] = $definition;
 }
 
-// Sort alphabetically
-ksort($newDict, SORT_NATURAL | SORT_FLAG_CASE);
+ksort($newDictionary, SORT_NATURAL | SORT_FLAG_CASE);
+try {
+    $json = json_encode($newDictionary, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+} catch (JsonException) {
+    dictionary_fail(422, 'The dictionary contains invalid text encoding.');
+}
 
-// Encode as pretty JSON
-$json = json_encode($newDict, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-
-// -------------------------------------------------------
-// 4. SAVE
-// -------------------------------------------------------
-file_put_contents($dictionaryPath, $json);
-
+dictionary_atomic_write(__DIR__ . '/assets/data/dictionary.json', $json . PHP_EOL);
+header('Content-Type: text/html; charset=UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dictionary Saved</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        button { padding: 8px 16px; cursor: pointer; }
-        code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
-        a { color: #0066cc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
 </head>
 <body>
-
-    <h2>Dictionary Saved Successfully!</h2>
-
+    <h1>Dictionary saved successfully.</h1>
+    <p><a href="dictionary-editor.php">Return to the editor</a></p>
 </body>
 </html>

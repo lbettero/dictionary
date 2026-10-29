@@ -11,29 +11,35 @@ define('DICT_BASE_URL', rtrim(dirname($_SERVER['PHP_SELF']), '/') . '/');
 
 // Modo demo sempre ativo aqui
 define('DICT_DEMO_MODE', true);
+
+$publicNonce = base64_encode(random_bytes(18));
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'nonce-{$publicNonce}'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
+$baseUrlHtml = htmlspecialchars(DICT_BASE_URL, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dictionary Module – v1.0.0</title>
+    <title>Dictionary Module – v1.1.0</title>
 
     <!-- Load ONLY the module CSS -->
-    <link rel="stylesheet" href="<?= DICT_BASE_URL ?>assets/css/dictionary.css">
-    <link rel="stylesheet" href="<?= DICT_BASE_URL ?>assets/css/dictionary-custom.css">
+    <link rel="stylesheet" href="<?= $baseUrlHtml ?>assets/css/dictionary.css">
+    <link rel="stylesheet" href="<?= $baseUrlHtml ?>assets/css/dictionary-custom.css">
 
     <!-- JS globals -->
-    <script>
+    <script nonce="<?= htmlspecialchars($publicNonce, ENT_QUOTES, 'UTF-8') ?>">
         window.DICT_DEMO_MODE = true;
-        window.DICT_BASE_URL  = "<?= DICT_BASE_URL ?>";
+        window.DICT_BASE_URL  = <?= json_encode(DICT_BASE_URL, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
         window.DICT_SCOPE_SELECTOR = '[data-dictionary-scope]';
     </script>
 </head>
 
 <body>
 
-    <h1>Dictionary Module – v1.0.0</h1>
+    <h1>Dictionary Module – v1.1.0</h1>
 
     <p>
         This module highlights predefined terms inside any webpage and shows tooltips with definitions stored in
@@ -65,7 +71,7 @@ define('DICT_DEMO_MODE', true);
     </p>
 
     <p>
-        <a href="<?= DICT_BASE_URL ?>assets/data/dictionary.json" download target="_blank">Download dictionary.json</a>
+        <a href="<?= $baseUrlHtml ?>assets/data/dictionary.json" download>Download dictionary.json</a>
     </p>
 
     <h2>Styles & Customization</h2>
@@ -103,14 +109,14 @@ public/style.css
 
     <p>These images illustrate how the dictionary content and styles were edited in earlier versions:</p>
 
-    <h3>Content Editor (old version – now removed)</h3>
-    <img src="<?= DICT_BASE_URL ?>content_editor.png" alt="Content Editor Example">
+    <h3>Content Editor</h3>
+    <img src="<?= $baseUrlHtml ?>content_editor.png" alt="Content Editor Example">
 
-    <h3>CSS Style Editor (old version – now removed)</h3>
-    <img src="<?= DICT_BASE_URL ?>style_editor.png" alt="CSS Style Editor Example">
+    <h3>CSS Style Editor</h3>
+    <img src="<?= $baseUrlHtml ?>style_editor.png" alt="CSS Style Editor Example">
 
     <p>
-        These tools were intentionally removed from the final release for security and simplicity.
+        These optional tools are disabled by default and require protected administrative access.
     </p>
 
     <h2>Installation</h2>
@@ -121,7 +127,7 @@ public/style.css
 <script src="/UITools/dictionary/dictionary-loader.js" defer></script>
 </pre>
 
-    <script src="<?= DICT_BASE_URL ?>dictionary-loader.js" defer></script>
+    <script src="<?= $baseUrlHtml ?>dictionary-loader.js" defer></script>
 
 </body>
 </html>
