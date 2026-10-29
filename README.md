@@ -1,4 +1,4 @@
-# 📘 Dictionary Module — v1.0.0
+# 📘 Dictionary Module — v1.1.0
 
 A lightweight, plug-and-play tooltip dictionary that automatically detects predefined terms inside any webpage, highlights them with a dashed underline, and displays clean tooltips containing their definitions.  
 All terms and definitions are loaded from a simple JSON file (`dictionary.json`), making the module fully portable and easy to integrate into any PHP, JS, or static website.
@@ -19,8 +19,8 @@ All terms and definitions are loaded from a simple JSON file (`dictionary.json`)
 - **JSON-based dictionary**  
   Very easy to edit and maintain (`assets/data/dictionary.json`).
 
-- **HTML support in definitions**  
-  URLs and emails inside definitions are automatically transformed into clickable links.
+- **Safe links in definitions**
+  Plain-text URLs and emails are transformed into links without interpreting definitions as HTML.
 
 - **Style inheritance**  
   The tooltip automatically inherits typography and global colors from the website’s main stylesheet.
@@ -52,7 +52,7 @@ dictionary/
 └── style_editor.png              ← old style editor preview
 ```
 
-> 📝 *The legacy JSON and CSS editors were intentionally removed for security and simplicity.*
+> The optional JSON and CSS editors are disabled by default and require explicit credentials and CSRF protection.
 
 ---
 
@@ -139,6 +139,20 @@ Example structure:
 }
 ```
 
+### Optional protected editors
+
+The browser editors and their save endpoints return `403` by default. Enable them only in a trusted administrative environment by defining all three server environment variables:
+
+```text
+DICTIONARY_EDITOR_ENABLED=1
+DICTIONARY_ADMIN_USER=<administrator name>
+DICTIONARY_ADMIN_PASSWORD=<strong unique password>
+```
+
+Open `dictionary-editor.php` or `dictionary-style-editor.php` and authenticate with HTTP Basic authentication. Forms use a session-bound CSRF token. The save endpoints accept only same-origin `POST` requests, validate size and values, and replace files atomically.
+
+Do not commit credentials to this repository. Production must use HTTPS so that Basic authentication and the administrative session are encrypted in transit.
+
 ---
 
 ## 🎨 Customizing the Tooltip UI
@@ -177,22 +191,28 @@ This page is safe to include inside any website during testing.
 
 - Works on **any server** (PHP not required unless editing JSON manually)  
 - Modern browser with ES6 support  
+- PHP 8.1 or newer for the optional protected editors
+- HTTPS for any deployed administrative editor
 
 ---
 
 ## 📦 Version
 
-**v1.0.0 — Initial stable release**
+**v1.1.0 — Security hardening release**
 
-Includes:
+This release keeps the original tooltip workflow and adds:
 
-- Automatic term detection system  
-- Tooltip engine  
-- JSON dictionary  
-- Auto-linking of URLs/emails  
-- Default and customizable styling  
-- Demo page  
-- Preview illustrations of the deprecated editors  
+- protected, disabled-by-default content and style editors;
+- authentication, CSRF and same-origin checks for administrative writes;
+- strict input limits and atomic file replacement;
+- text-only DOM rendering that prevents definitions from becoming executable HTML;
+- local, versioned runtime loading instead of mutable remote JavaScript;
+- Content Security Policy and secure deployment guidance.
+
+### Version history
+
+- **v1.1.0** — Security hardening and protected optional editors.
+- **v1.0.0** — Initial stable tooltip dictionary release.
 
 ---
 

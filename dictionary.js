@@ -1,99 +1,140 @@
-// dictionary.js – UNIVERSAL VERSION WITH SCOPE SUPPORT
-(async function() {
+// Dictionary tooltip engine with scoped, text-only rendering.
+(async function () {
+    'use strict';
 
-    //----------------------------------------------------------------------
-    // 1. GET JSON LOCATION
-    //----------------------------------------------------------------------
-    const DICT_URL = window.DICT_URL || 'dictionary.json';
+    const MAX_DICTIONARY_BYTES = 1048576;
+    const MAX_ENTRIES = 2000;
+    const MAX_TERM_LENGTH = 200;
+    const MAX_DEFINITION_LENGTH = 5000;
+    const dictionaryUrl = window.DICT_URL || 'assets/data/dictionary.json';
 
     async function loadDictionary() {
         try {
-            const res = await fetch(DICT_URL);
-
-            if (!res.ok) {
-                console.error("Dictionary module: error loading dictionary.json at:", DICT_URL);
-                return {};
+            const response = await fetch(dictionaryUrl, {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/json' }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
             }
 
-            return await res.json();
+            const contentLength = Number(response.headers.get('content-length') || 0);
+            if (contentLength > MAX_DICTIONARY_BYTES) {
+                throw new Error('Dictionary is too large');
+            }
 
-        } catch (err) {
-            console.error("Dictionary module: fetch failed:", err);
+            const raw = await response.text();
+            if (new Blob([raw]).size > MAX_DICTIONARY_BYTES) {
+                throw new Error('Dictionary is too large');
+            }
+
+            const parsed = JSON.parse(raw);
+            if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+                throw new Error('Dictionary must be an object');
+            }
+
+            const entries = Object.entries(parsed);
+            if (entries.length > MAX_ENTRIES) {
+                throw new Error('Dictionary has too many entries');
+            }
+
+            const safeDictionary = {};
+            for (const [term, definition] of entries) {
+                if (typeof definition !== 'string' || term.length > MAX_TERM_LENGTH || definition.length > MAX_DEFINITION_LENGTH) {
+                    throw new Error('Dictionary contains an invalid entry');
+                }
+                safeDictionary[term] = definition;
+            }
+            return safeDictionary;
+        } catch (error) {
+            console.error('Dictionary module: could not load the dictionary.', error);
             return {};
         }
     }
 
-    //----------------------------------------------------------------------
-    // 2. TURN URLS AND EMAILS INTO LINKS
-    //----------------------------------------------------------------------
-    function linkify(text) {
-        if (!text) return text;
+    function appendDefinition(container, definition) {
+        const pattern = /\b((?:https?:\/\/|www\.)[^\s]+|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})\b/gi;
+        let lastIndex = 0;
 
-        // URL pattern
-        const urlPattern = /\b((https?:\/\/|www\.)[^\s]+)/gi;
-        text = text.replace(urlPattern, match => {
-            let url = match;
-            if (!match.startsWith('http')) {
-                url = 'http://' + match;
+        for (const match of definition.matchAll(pattern)) {
+            container.appendChild(document.createTextNode(definition.slice(lastIndex, match.index)));
+            const value = match[0];
+            const link = document.createElement('a');
+            link.textContent = value;
+
+            if (value.includes('@') && !value.toLowerCase().startsWith('http')) {
+                link.href = `mailto:${value}`;
+            } else {
+                try {
+                    const url = new URL(value.startsWith('www.') ? `https://${value}` : value);
+                    if (!['http:', 'https:'].includes(url.protocol)) {
+                        throw new Error('Unsupported protocol');
+                    }
+                    link.href = url.href;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                } catch {
+                    container.appendChild(document.createTextNode(value));
+                    lastIndex = match.index + value.length;
+                    continue;
+                }
             }
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${match}</a>`;
-        });
 
-        // Email pattern
-        const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z]{2,}\b/gi;
-        text = text.replace(emailPattern, email => {
-            return `<a href="mailto:${email}">${email}</a>`;
-        });
-
-        return text;
+            container.appendChild(link);
+            lastIndex = match.index + value.length;
+        }
+        container.appendChild(document.createTextNode(definition.slice(lastIndex)));
     }
 
-    //----------------------------------------------------------------------
-    // 3. HIGHLIGHT TERMS INSIDE A GIVEN SCOPE
-    //----------------------------------------------------------------------
-    function highlightTerms(dict, scopeElement) {
-        if (!dict || Object.keys(dict).length === 0) return;
+    function highlightTerms(dictionary, scopeElement) {
+        const keys = Object.keys(dictionary);
+        if (keys.length === 0) {
+            return;
+        }
 
-        // Sort terms longest-first → avoids partial matches
-        const terms = Object.keys(dict)
+        const escapedTerms = keys
             .sort((a, b) => b.length - a.length)
-            .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")); // regex escape
-
-        if (terms.length === 0) return;
-
-        const regex = new RegExp(`\\b(${terms.join("|")})\\b`, "gi");
+            .map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+        const regex = new RegExp(`\\b(${escapedTerms.join('|')})\\b`, 'gi');
+        const lookup = new Map(keys.map((key) => [key.toLocaleLowerCase(), key]));
 
         function walk(node) {
-
-            // Process only text nodes
             if (node.nodeType === Node.TEXT_NODE) {
-                const text = node.textContent;
-
-                if (regex.test(text)) {
-                    const span = document.createElement("span");
-
-                    span.innerHTML = text.replace(regex, match => {
-                        const key = Object.keys(dict).find(
-                            k => k.toLowerCase() === match.toLowerCase()
-                        );
-
-                        const definition = linkify(dict[key]);
-
-                        return `
-                            <span class="dict-term">
-                                ${match}
-                                <span class="dict-tooltip">${definition}</span>
-                            </span>
-                        `;
-                    });
-
-                    node.replaceWith(...span.childNodes);
+                const text = node.textContent || '';
+                const matches = Array.from(text.matchAll(regex));
+                if (matches.length === 0) {
+                    return;
                 }
 
-            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const fragment = document.createDocumentFragment();
+                let lastIndex = 0;
+                for (const match of matches) {
+                    fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+                    const originalTerm = match[0];
+                    const key = lookup.get(originalTerm.toLocaleLowerCase());
+                    if (!key) {
+                        fragment.appendChild(document.createTextNode(originalTerm));
+                    } else {
+                        const term = document.createElement('span');
+                        term.className = 'dict-term';
+                        term.appendChild(document.createTextNode(originalTerm));
 
-                const forbidden = ["SCRIPT", "STYLE", "CODE", "PRE"];
-                if (!forbidden.includes(node.tagName)) {
+                        const tooltip = document.createElement('span');
+                        tooltip.className = 'dict-tooltip';
+                        appendDefinition(tooltip, dictionary[key]);
+                        term.appendChild(tooltip);
+                        fragment.appendChild(term);
+                    }
+                    lastIndex = match.index + originalTerm.length;
+                }
+                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+                node.replaceWith(fragment);
+                return;
+            }
+
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const forbidden = ['SCRIPT', 'STYLE', 'CODE', 'PRE', 'TEXTAREA', 'INPUT', 'SELECT', 'OPTION'];
+                if (!forbidden.includes(node.tagName) && !node.classList.contains('dict-term')) {
                     Array.from(node.childNodes).forEach(walk);
                 }
             }
@@ -102,34 +143,16 @@
         walk(scopeElement);
     }
 
-    //----------------------------------------------------------------------
-    // 4. DETERMINE SCOPE (NEW!)
-    //----------------------------------------------------------------------
-    const scopeSelector = window.DICT_SCOPE_SELECTOR || null;
-
-    let scopeElement = null;
-
-    if (scopeSelector) {
-        // If selector provided, try to find the element
-        scopeElement = document.querySelector(scopeSelector);
-
-        if (!scopeElement) {
-            console.warn(
-                "Dictionary module: DICT_SCOPE_SELECTOR was set but no element matched:",
-                scopeSelector,
-                "\nFallback to document.body"
-            );
-            scopeElement = document.body;
+    const selector = typeof window.DICT_SCOPE_SELECTOR === 'string' ? window.DICT_SCOPE_SELECTOR : '';
+    let scopeElement = document.body;
+    if (selector) {
+        try {
+            scopeElement = document.querySelector(selector) || document.body;
+        } catch {
+            console.error('Dictionary module: invalid scope selector.');
+            return;
         }
-    } else {
-        // Default behavior
-        scopeElement = document.body;
     }
 
-    //----------------------------------------------------------------------
-    // 5. LOAD & APPLY DICTIONARY
-    //----------------------------------------------------------------------
-    const dictionary = await loadDictionary();
-    highlightTerms(dictionary, scopeElement);
-
-})();
+    highlightTerms(await loadDictionary(), scopeElement);
+}());

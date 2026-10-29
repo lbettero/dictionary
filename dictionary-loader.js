@@ -1,76 +1,41 @@
-// dictionary-loader.js
-(function() {
+// Loads the dictionary module only from the same installation as this file.
+(function () {
+    'use strict';
 
-    // --------------------------------------------
-    // AUTO-DETECT MODE (DEMO or EMBED)
-    // --------------------------------------------
-    const IS_DEMO = window.DICT_DEMO_MODE === true;
+    const loaderUrl = document.currentScript && document.currentScript.src
+        ? document.currentScript.src
+        : document.baseURI;
+    const moduleBase = new URL('./', loaderUrl);
 
-    // --------------------------------------------
-    // CONFIGS FOR DEMO MODE
-    // (paths come from index.php)
-    // --------------------------------------------
-    const DEMO_BASE = window.DICT_BASE_URL || "./";
-
-    const DEMO = {
+    const config = {
         css: [
-            DEMO_BASE + "dictionary.css",
-            DEMO_BASE + "dictionary-custom.css"
+            new URL('assets/css/dictionary.css', moduleBase).href,
+            new URL('assets/css/dictionary-custom.css', moduleBase).href
         ],
-        js:  DEMO_BASE + "dictionary.js",
-        json: DEMO_BASE + "dictionary.json"
+        js: new URL('dictionary.js', moduleBase).href,
+        json: new URL('assets/data/dictionary.json', moduleBase).href
     };
 
-    // --------------------------------------------
-    // CONFIGS FOR EMBED MODE (default)
-    // --------------------------------------------
-    const EMBED_BASE = "https://smartsmallthings.com/UITools/dictionary";
-
-    const EMBED = {
-        css: [
-            EMBED_BASE + "/dictionary.css",
-            "/assets/css/dictionary-custom.css"
-        ],
-        js: EMBED_BASE + "/dictionary.js",
-        json: "/assets/data/dictionary.json"
-    };
-
-    // --------------------------------------------
-    // FINAL CONFIG CHOSEN BASED ON MODE
-    // --------------------------------------------
-    const CFG = IS_DEMO ? DEMO : EMBED;
-
-    // --------------------------------------------
-    // CSS LOADER
-    // --------------------------------------------
-    function loadCSS(url) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
+    function loadCss(url) {
+        const alreadyLoaded = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+            .some((link) => link.href === url);
+        if (alreadyLoaded) {
+            return;
+        }
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
         link.href = url;
         document.head.appendChild(link);
     }
 
-    CFG.css.forEach(loadCSS);
-
-    // --------------------------------------------
-    // JS LOADER
-    // --------------------------------------------
-    function loadJS(url, callback) {
-        const script = document.createElement("script");
+    function loadScript(url) {
+        const script = document.createElement('script');
         script.src = url;
         script.defer = true;
-        if (callback) script.onload = callback;
         document.body.appendChild(script);
     }
 
-    // --------------------------------------------
-    // EXPOSE JSON URL GLOBALLY
-    // --------------------------------------------
-    window.DICT_URL = CFG.json;
-
-    // --------------------------------------------
-    // LOAD MAIN ENGINE
-    // --------------------------------------------
-    loadJS(CFG.js);
-
-})();
+    config.css.forEach(loadCss);
+    window.DICT_URL = config.json;
+    loadScript(config.js);
+}());

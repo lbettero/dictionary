@@ -1,83 +1,66 @@
 <?php
-// save_dictionary_css.php — UNIVERSAL VERSION
+declare(strict_types=1);
 
-// -----------------------------------------------------
-// 1. AUTO-DETECT MODE (DEMO MODULE vs SITE ROOT)
-// -----------------------------------------------------
-$localCssPath = __DIR__ . '/dictionary-custom.css'; // module demo
-$rootCssPath  = $_SERVER['DOCUMENT_ROOT'] . '/assets/css/dictionary-custom.css'; // site install
+require_once __DIR__ . '/security.php';
+dictionary_require_secure_post();
 
-$isModuleDemo = false;
-
-// Se existe um dictionary-custom.css local → estamos no módulo embutido (DEMO)
-if (file_exists($localCssPath)) {
-    $cssPath = $localCssPath;
-    $isModuleDemo = true;
-    $backToEditor = "dictionary-style-editor.php";
-    $backHome     = "index.php";
-} else {
-    // Caso contrário → estamos no site real
-    $cssPath = $rootCssPath;
-    $isModuleDemo = false;
-    $backToEditor = "dictionary-style-editor.php";
-    $backHome     = "/"; // ou sua home real
+function require_hex_color(string $field): string
+{
+    $value = $_POST[$field] ?? null;
+    if (!is_string($value) || preg_match('/^#[0-9a-fA-F]{6}$/', $value) !== 1) {
+        dictionary_fail(422, 'Invalid color value.');
+    }
+    return strtolower($value);
 }
 
-// -----------------------------------------------------
-// 2. CAPTURE POSTED VALUES
-// -----------------------------------------------------
-$bg        = $_POST['bg_color']        ?? '#333333';
-$text      = $_POST['text_color']      ?? '#ffffff';
-$underline = $_POST['underline_color'] ?? '#555555';
+function require_integer_range(string $field, int $minimum, int $maximum): int
+{
+    $rawValue = $_POST[$field] ?? null;
+    $value = is_string($rawValue) ? filter_var($rawValue, FILTER_VALIDATE_INT) : false;
+    if ($value === false || $value < $minimum || $value > $maximum) {
+        dictionary_fail(422, 'Invalid numeric value.');
+    }
+    return $value;
+}
 
-$width   = intval($_POST['width']      ?? 280);
-$padding = intval($_POST['padding']    ?? 12);
-$radius  = intval($_POST['radius']     ?? 6);
-$font    = intval($_POST['font_size']  ?? 14);
+$background = require_hex_color('bg_color');
+$text = require_hex_color('text_color');
+$underline = require_hex_color('underline_color');
+$width = require_integer_range('width', 120, 800);
+$padding = require_integer_range('padding', 0, 64);
+$radius = require_integer_range('radius', 0, 64);
+$fontSize = require_integer_range('font_size', 8, 48);
 
-// -----------------------------------------------------
-// 3. BUILD CSS OUTPUT
-// -----------------------------------------------------
 $css = <<<CSS
 /* Auto-generated custom CSS for Dictionary tooltip */
 
 .dict-term {
-    border-bottom: 1px dashed $underline;
+    border-bottom: 1px dashed {$underline};
 }
 
 .dict-tooltip {
-    background: $bg !important;
-    color: $text !important;
+    background: {$background} !important;
+    color: {$text} !important;
     max-width: {$width}px !important;
     padding: {$padding}px !important;
     border-radius: {$radius}px !important;
-    font-size: {$font}px !important;
+    font-size: {$fontSize}px !important;
 }
 
 CSS;
 
-// -----------------------------------------------------
-// 4. SAVE FILE
-// -----------------------------------------------------
-file_put_contents($cssPath, $css);
-
+dictionary_atomic_write(__DIR__ . '/assets/css/dictionary-custom.css', $css);
+header('Content-Type: text/html; charset=UTF-8');
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>CSS Saved</title>
-    <style>
-        body { font-family: Arial; padding: 30px; }
-        code { background: #eee; padding: 4px 8px; border-radius: 4px; }
-        a { color: #0066cc; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dictionary CSS Saved</title>
 </head>
-
 <body>
-
-    <h2>Custom CSS Saved Successfully!</h2>
-
+    <h1>Dictionary styles saved successfully.</h1>
+    <p><a href="dictionary-style-editor.php">Return to the style editor</a></p>
 </body>
 </html>
